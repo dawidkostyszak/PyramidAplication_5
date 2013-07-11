@@ -1,2 +1,0 @@
-https://github.com/dawidkostyszak/allegro/archive/master.tar.gz#egg=allegro
-https://github.com/dawidkostyszak/nokaut/archive/master.tar.gz#egg=nokaut
