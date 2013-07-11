@@ -10,12 +10,18 @@ from .models import (
 )
 
 
-@view_config(route_name='home', renderer='pyramidaplication:templates/main.mako')
+@view_config(
+    route_name='home',
+    renderer='pyramidaplication:templates/main.mako'
+)
 def home_view(request):
     return {}
 
 
-@view_config(route_name='search_result', renderer='pyramidaplication:templates/result.mako')
+@view_config(
+    route_name='search_result',
+    renderer='pyramidaplication:templates/result.mako'
+)
 def search_result_view(request):
 
     data = request.GET.get('item')
@@ -33,7 +39,10 @@ def search_result_view(request):
         allegro_url = ''
 
     try:
-        nokaut_price, nokaut_url = nokaut_api(data, request.registry.settings.get('nokaut_key'))
+        nokaut_price, nokaut_url = nokaut_api(
+            data,
+            request.registry.settings.get('nokaut_key')
+        )
     except NokautError:
         nokaut_state = 'price'
         nokaut_price = 'No product'
@@ -67,27 +76,43 @@ def search_result_view(request):
     return response
 
 
-@view_config(route_name='login', renderer='pyramidaplication:templates/login.mako')
+@view_config(
+    route_name='login',
+    renderer='pyramidaplication:templates/login.mako'
+)
 def login_view(request):
     return {}
 
 
-@view_config(route_name='register', renderer='pyramidaplication:templates/register.mako')
+@view_config(route_name='register',
+             renderer='pyramidaplication:templates/register.mako')
 def register_view(request):
     if request.method == 'POST':
         print request.GET.get('login'), request.GET.get('password'), request.GET.get('confirm_password')
     return {}
 
 
-@view_config(route_name='history', renderer='pyramidaplication:templates/history.mako')
+@view_config(
+    route_name='history',
+    renderer='pyramidaplication:templates/history.mako'
+)
 def history_view(request):
     response = {'history_search': {}}
     products = DBSession.query(Product).filter_by().all()
     for product in products:
-        response['history_search'][product.id] = (product.name, product.a_price, product.a_url, product.n_price, product.n_url)
+        response['history_search'][product.id] = (
+            product.name,
+            product.a_price,
+            product.a_url,
+            product.n_price,
+            product.n_url
+        )
     return response
 
 
-@view_config(route_name='top3', renderer='pyramidaplication:templates/history.mako')
+@view_config(
+    route_name='top3',
+    renderer='pyramidaplication:templates/history.mako'
+)
 def top3_view(request):
     return {}
