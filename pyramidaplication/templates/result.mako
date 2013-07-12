@@ -4,7 +4,7 @@
         % if error == None:
             Name product which you want compare: ${product}
         % else:
-            Give a product name to compare
+            ${error}
         % endif
     </div>
 </div>

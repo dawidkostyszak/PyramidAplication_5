@@ -15,8 +15,12 @@
                     <div class="logo_txt_small">We will help you find and compare products</div>
                 </div>
                 <div class="box_login">
-                    <a class="btn btn-success" href="/register">Register</a>
-                    <a class="btn" href="/login">Login</a>
+                    % if logged_in:
+                        <a class="btn btn-unsuccess" href="/logout">Logout</a>
+                    % else:
+                        <a class="btn btn-success" href="/register">Register</a>
+                        <a class="btn" href="/login">Login</a>
+                    % endif
                 </div>
             </div>
             ${next.body()}

@@ -8,7 +8,6 @@ from nokaut.lib import nokaut_api, NokautError
 
 from pyramid.httpexceptions import (
     HTTPFound,
-    HTTPNotFound,
 )
 
 from pyramid.security import (
@@ -23,15 +22,16 @@ from .models import (
     User,
 )
 
-from .security import USERS
-
 
 @view_config(
     route_name='home',
     renderer='pyramidaplication:templates/main.mako'
 )
 def home_view(request):
-    return {}
+    logged_in = authenticated_userid(request)
+    print logged_in
+
+    return {'logged_in': logged_in}
 
 
 @view_config(
@@ -40,10 +40,15 @@ def home_view(request):
 )
 def search_result_view(request):
 
+    logged_in = authenticated_userid(request)
+
+    if not logged_in:
+        return {'error': 'You need to login before search.'}
+
     data = request.GET.get('item')
 
     if not data:
-        return {'error': 'no data'}
+        return {'error': 'Give a product name to compare'}
 
     allegro_state = nokaut_state = 'price'
 
@@ -79,7 +84,7 @@ def search_result_view(request):
         nokaut_price_state=nokaut_state,
         nokaut_price=nokaut_price,
         nokaut_url=nokaut_url,
-        logged_in=authenticated_userid(request),
+        logged_in=logged_in,
     )
 
     product = Product(
@@ -98,14 +103,15 @@ def search_result_view(request):
     route_name='login',
     renderer='pyramidaplication:templates/login.mako'
 )
-@forbidden_view_config(renderer='pyramidaplication:templates/login.mako')
 def login_view(request):
     error = None
     if request.method == 'POST':
         login = request.POST.get('login')
         password = request.POST.get('password')
 
-        if USERS.get(login) == password:
+        user = DBSession.query(User).filter_by(login=login, password=password).first()
+
+        if user:
             headers = remember(request, login)
             return HTTPFound(
                 location='/',
@@ -122,7 +128,7 @@ def login_view(request):
 def logout(request):
     headers = forget(request)
     return HTTPFound(
-        location=request.route_url('/'),
+        location=('/'),
         headers=headers
     )
 

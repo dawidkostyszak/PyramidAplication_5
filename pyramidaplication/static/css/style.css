@@ -380,6 +380,22 @@ a.info:hover span{ /*the span will display just on :hover state*/
   *background-color: #499249;
 }
 
+.btn-unsuccess {
+  color: #ffffff;
+  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  background-color: #ff0000;
+  *background-color: #ff3e41;
+  background-image: -moz-linear-gradient(top, #ff0000, #ff3e41);
+  background-image: -webkit-gradient(linear, 0 0, 0 100%, from(#ff0000), to(#ff3e41));
+  background-image: -webkit-linear-gradient(top, #ff0000, #ff3e41);
+  background-image: -o-linear-gradient(top, #ff0000, #ff3e41);
+  background-image: linear-gradient(to bottom, #ff0000, #ff3e41);
+  background-repeat: repeat-x;
+  border-color: rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.1) rgba(0, 0, 0, 0.25);
+  filter: progid:DXImageTransform.Microsoft.gradient(startColorstr='#ff62c462', endColorstr='#ff51a351', GradientType=0);
+  filter: progid:DXImageTransform.Microsoft.gradient(enabled=false);
+}
+
 .btn-unsuccess:hover {
   color: #ffffff;
   background-color: #ff0000;
