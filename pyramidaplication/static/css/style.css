@@ -380,4 +380,10 @@ a.info:hover span{ /*the span will display just on :hover state*/
   *background-color: #499249;
 }
 
+.btn-unsuccess:hover {
+  color: #ffffff;
+  background-color: #ff0000;
+  *background-color: #ff3e41;
+}
+
 /* << Bootstrap */

@@ -1,13 +1,29 @@
-from pyramid.view import view_config
+from pyramid.view import (
+    view_config,
+    forbidden_view_config,
+)
+
 from allegro.lib import allegro_api, AllegroError
 from nokaut.lib import nokaut_api, NokautError
-from pyramid.httpexceptions import HTTPFound
+
+from pyramid.httpexceptions import (
+    HTTPFound,
+    HTTPNotFound,
+)
+
+from pyramid.security import (
+    remember,
+    forget,
+    authenticated_userid,
+)
 
 from .models import (
     DBSession,
     Product,
     User,
 )
+
+from .security import USERS
 
 
 @view_config(
@@ -54,16 +70,17 @@ def search_result_view(request):
         else:
             nokaut_state = 'price win'
 
-    response = {
-        'error': None,
-        'product': data,
-        'allegro_price_state': allegro_state,
-        'allegro_price': allegro_price,
-        'allegro_url': allegro_url,
-        'nokaut_price_state': nokaut_state,
-        'nokaut_price': nokaut_price,
-        'nokaut_url': nokaut_url,
-    }
+    response = dict(
+        error=None,
+        product=data,
+        allegro_price_state=allegro_state,
+        allegro_price=allegro_price,
+        allegro_url=allegro_url,
+        nokaut_price_state=nokaut_state,
+        nokaut_price=nokaut_price,
+        nokaut_url=nokaut_url,
+        logged_in=authenticated_userid(request),
+    )
 
     product = Product(
         name=data,
@@ -81,12 +98,39 @@ def search_result_view(request):
     route_name='login',
     renderer='pyramidaplication:templates/login.mako'
 )
+@forbidden_view_config(renderer='pyramidaplication:templates/login.mako')
 def login_view(request):
-    return {}
+    error = None
+    if request.method == 'POST':
+        login = request.POST.get('login')
+        password = request.POST.get('password')
+
+        if USERS.get(login) == password:
+            headers = remember(request, login)
+            return HTTPFound(
+                location='/',
+                headers=headers
+            )
+        error = 'Failed login'
+
+    return dict(
+        error=error,
+    )
 
 
-@view_config(route_name='register',
-             renderer='pyramidaplication:templates/register.mako')
+@view_config(route_name='logout')
+def logout(request):
+    headers = forget(request)
+    return HTTPFound(
+        location=request.route_url('/'),
+        headers=headers
+    )
+
+
+@view_config(
+    route_name='register',
+    renderer='pyramidaplication:templates/register.mako'
+)
 def register_view(request):
     message = None
     error = None
@@ -95,14 +139,13 @@ def register_view(request):
         login = request.POST.get('login')
         password = request.POST.get('password')
         conf_password = request.POST.get('confirm_password')
-        #import ipdb; ipdb.set_trace()
 
         if not login:
-            error = 'Please add login'
+            error = 'Please add login.'
         elif not password:
-            error = 'Please add password'
+            error = 'Please add password.'
         elif not conf_password:
-            error = 'Please add confirm password'
+            error = 'Please add confirm password.'
 
         if error:
             return {'message': message, 'error': error}
@@ -120,7 +163,10 @@ def register_view(request):
             user = User(login=login, password=password)
             DBSession.add(user)
 
-    return {'message': message, 'error': error}
+    return dict(
+        message=message,
+        error=error
+    )
 
 
 @view_config(
@@ -128,7 +174,10 @@ def register_view(request):
     renderer='pyramidaplication:templates/history.mako'
 )
 def history_view(request):
-    response = {'history_search': {}}
+    response = dict(
+        history_search={},
+        logged_in=authenticated_userid(request),
+    )
     products = DBSession.query(Product).filter_by().all()
     for product in products:
         response['history_search'][product.id] = (

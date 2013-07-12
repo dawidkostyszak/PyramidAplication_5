@@ -33,6 +33,7 @@ def main(global_config, **settings):
     config.add_route('home', '/')
     config.add_route('search_result', '/search_result')
     config.add_route('login', '/login')
+    config.add_route('logout', '/logout')
     config.add_route('register', '/register')
     config.add_route('history', '/history')
     config.add_route('top3', '/top3')
