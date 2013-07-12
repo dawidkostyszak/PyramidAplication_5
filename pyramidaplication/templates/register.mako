@@ -2,7 +2,7 @@
 <div class="middle">
     <div class="form_login">
         <div class="head_login">Register</div>
-        <form action="/login">
+        <form method="post" action="/login">
             <input class="input_text" type="text" value="login"/>
             <input class="input_text" type="password" value="password"/>
             <input class="input_text" type="password" value="confirm_password"/>

@@ -88,7 +88,7 @@ def login_view(request):
              renderer='pyramidaplication:templates/register.mako')
 def register_view(request):
     if request.method == 'POST':
-        print request.GET.get('login'), request.GET.get('password'), request.GET.get('confirm_password')
+        print request.POST.get('login'), request.POST.get('password'), request.POST.get('confirm_password')
     return {}
 
 
