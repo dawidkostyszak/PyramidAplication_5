@@ -1,6 +1,5 @@
 from pyramid.view import (
     view_config,
-    forbidden_view_config,
 )
 
 from allegro.lib import allegro_api, AllegroError
@@ -25,7 +24,7 @@ from .models import (
 
 @view_config(
     route_name='home',
-    renderer='pyramidaplication:templates/main.mako'
+    renderer='pyramidaplication:templates/main.mako',
 )
 def home_view(request):
     logged_in = authenticated_userid(request)
@@ -36,7 +35,7 @@ def home_view(request):
 
 @view_config(
     route_name='search_result',
-    renderer='pyramidaplication:templates/result.mako'
+    renderer='pyramidaplication:templates/result.mako',
 )
 def search_result_view(request):
 
@@ -87,12 +86,21 @@ def search_result_view(request):
         logged_in=logged_in,
     )
 
+    popularity = 1
+
+    products = DBSession.query(Product).filter_by(name=data).all()
+    for prod in products:
+        prod.popularity += 1
+        popularity = prod.popularity
+
     product = Product(
         name=data,
         a_price=allegro_price,
         a_url=allegro_url,
         n_price=nokaut_price,
         n_url=nokaut_url,
+        popularity=popularity,
+        user=logged_in,
     )
     DBSession.add(product)
 
@@ -101,7 +109,7 @@ def search_result_view(request):
 
 @view_config(
     route_name='login',
-    renderer='pyramidaplication:templates/login.mako'
+    renderer='pyramidaplication:templates/login.mako',
 )
 def login_view(request):
     error = None
@@ -109,13 +117,16 @@ def login_view(request):
         login = request.POST.get('login')
         password = request.POST.get('password')
 
-        user = DBSession.query(User).filter_by(login=login, password=password).first()
+        user = DBSession.query(User).filter_by(
+            login=login,
+            password=password,
+        ).first()
 
         if user:
             headers = remember(request, login)
             return HTTPFound(
                 location='/',
-                headers=headers
+                headers=headers,
             )
         error = 'Failed login'
 
@@ -129,13 +140,13 @@ def logout(request):
     headers = forget(request)
     return HTTPFound(
         location=('/'),
-        headers=headers
+        headers=headers,
     )
 
 
 @view_config(
     route_name='register',
-    renderer='pyramidaplication:templates/register.mako'
+    renderer='pyramidaplication:templates/register.mako',
 )
 def register_view(request):
     message = None
@@ -171,34 +182,51 @@ def register_view(request):
 
     return dict(
         message=message,
-        error=error
+        error=error,
     )
 
 
 @view_config(
     route_name='history',
-    renderer='pyramidaplication:templates/history.mako'
+    renderer='pyramidaplication:templates/history.mako',
 )
 def history_view(request):
     response = dict(
         history_search={},
         logged_in=authenticated_userid(request),
     )
-    products = DBSession.query(Product).filter_by().all()
+    products = DBSession.query(Product).filter_by(
+        user=response['logged_in']).all()
+
     for product in products:
+        if product.a_price < product.n_price:
+            price = product.a_price
+            url = product.a_url
+        else:
+            price = product.n_price
+            url = product.n_url,
         response['history_search'][product.id] = (
             product.name,
-            product.a_price,
-            product.a_url,
-            product.n_price,
-            product.n_url
+            price,
+            url[0],
         )
     return response
 
 
 @view_config(
     route_name='top3',
-    renderer='pyramidaplication:templates/history.mako'
+    renderer='pyramidaplication:templates/top3.mako',
 )
 def top3_view(request):
-    return {}
+    response = dict(
+        top3={},
+        logged_in=authenticated_userid(request),
+    )
+
+    products = DBSession.query(Product).order_by(
+        Product.popularity.desc()).all()
+    for product in products:
+        response['top3'][product.name] = ''
+        if len(response['top3']) == 3:
+            break
+    return response

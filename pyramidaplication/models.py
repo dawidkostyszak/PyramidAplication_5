@@ -26,6 +26,8 @@ class Product(Base):
     a_url = Column(Text)
     n_price = Column(Float)
     n_url = Column(Text)
+    popularity = Column(Integer)
+    user = Column(Text)
 
 
 class User(Base):
