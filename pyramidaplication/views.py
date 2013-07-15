@@ -170,32 +170,14 @@ def register_view(request):
     error = None
 
     if request.method == 'POST':
-        login = request.POST.get('login')
-        password = request.POST.get('password')
-        conf_password = request.POST.get('confirm_password')
-
-        if not login:
-            error = 'Please add login.'
-        elif not password:
-            error = 'Please add password.'
-        elif not conf_password:
-            error = 'Please add confirm password.'
-
-        if error:
-            return {'message': message, 'error': error}
-
-        log = DBSession.query(User).filter_by(login=login).first()
-
-        if log:
-            error = 'Login already in use please try another.'
-        elif len(password) < 8:
-            error = 'Password to short. Need 8 characters.'
-        elif password != conf_password:
-            error = 'Confirm password is different than password.'
-        else:
-            message = 'Login registered successfully.'
-            user = User(login=login, password=password)
+        form = Form(request, schema=RegistrationForm)
+        import ipdb; ipdb.set_trace()
+        if form.validate():
+            user = User(form.data['login'], form.data['password'])
             DBSession.add(user)
+            message = 'Login registered successfully.'
+
+        #import ipdb; ipdb.set_trace()
 
     return dict(
         message=message,
