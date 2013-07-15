@@ -3,6 +3,7 @@ from sqlalchemy import (
     Integer,
     Text,
     Float,
+    ForeignKey,
 )
 
 from sqlalchemy.ext.declarative import declarative_base
@@ -27,7 +28,7 @@ class Product(Base):
     n_price = Column(Float)
     n_url = Column(Text)
     popularity = Column(Integer)
-    user = Column(Text)
+    user_id = Column(Integer, ForeignKey('users.id'))
 
 
 class User(Base):

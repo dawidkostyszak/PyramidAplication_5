@@ -15,7 +15,7 @@
                     <div class="logo_txt_small">We will help you find and compare products</div>
                 </div>
                 <div class="box_login">
-                    % if logged_in:
+                    % if request.user:
                         <a class="btn btn-unsuccess" href="/logout">Logout</a>
                     % else:
                         <a class="btn btn-success" href="/register">Register</a>

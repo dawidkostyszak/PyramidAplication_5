@@ -2,8 +2,15 @@ from pyramid.view import (
     view_config,
 )
 
-from allegro.lib import allegro_api, AllegroError
-from nokaut.lib import nokaut_api, NokautError
+from allegro.lib import (
+    allegro_api,
+    AllegroError,
+)
+
+from nokaut.lib import (
+    nokaut_api,
+    NokautError,
+)
 
 from pyramid.httpexceptions import (
     HTTPFound,
@@ -13,6 +20,8 @@ from pyramid.security import (
     remember,
     forget,
     authenticated_userid,
+    unauthenticated_userid,
+    NO_PERMISSION_REQUIRED,
 )
 
 from .models import (
@@ -21,16 +30,23 @@ from .models import (
     User,
 )
 
+from pyramid_simpleform import Form
+from forms import RegistrationForm
+
+
+def get_user(request):
+    user_id = unauthenticated_userid(request)
+
+    if user_id is not None:
+        return DBSession.query(User).filter_by(login=user_id)
+
 
 @view_config(
     route_name='home',
     renderer='pyramidaplication:templates/main.mako',
 )
 def home_view(request):
-    logged_in = authenticated_userid(request)
-    print logged_in
-
-    return {'logged_in': logged_in}
+    return {}
 
 
 @view_config(
@@ -39,9 +55,7 @@ def home_view(request):
 )
 def search_result_view(request):
 
-    logged_in = authenticated_userid(request)
-
-    if not logged_in:
+    if not request.user:
         return {'error': 'You need to login before search.'}
 
     data = request.GET.get('item')
@@ -83,9 +97,9 @@ def search_result_view(request):
         nokaut_price_state=nokaut_state,
         nokaut_price=nokaut_price,
         nokaut_url=nokaut_url,
-        logged_in=logged_in,
     )
 
+    user_id = request.user.first().id
     popularity = 1
 
     products = DBSession.query(Product).filter_by(name=data).all()
@@ -100,7 +114,7 @@ def search_result_view(request):
         n_price=nokaut_price,
         n_url=nokaut_url,
         popularity=popularity,
-        user=logged_in,
+        user_id=user_id,
     )
     DBSession.add(product)
 
@@ -110,6 +124,7 @@ def search_result_view(request):
 @view_config(
     route_name='login',
     renderer='pyramidaplication:templates/login.mako',
+    permission=NO_PERMISSION_REQUIRED,
 )
 def login_view(request):
     error = None
@@ -123,6 +138,7 @@ def login_view(request):
         ).first()
 
         if user:
+            authenticated_userid(request)
             headers = remember(request, login)
             return HTTPFound(
                 location='/',
@@ -139,7 +155,7 @@ def login_view(request):
 def logout(request):
     headers = forget(request)
     return HTTPFound(
-        location=('/'),
+        location=('/login'),
         headers=headers,
     )
 
@@ -147,6 +163,7 @@ def logout(request):
 @view_config(
     route_name='register',
     renderer='pyramidaplication:templates/register.mako',
+    permission=NO_PERMISSION_REQUIRED,
 )
 def register_view(request):
     message = None
@@ -195,8 +212,9 @@ def history_view(request):
         history_search={},
         logged_in=authenticated_userid(request),
     )
-    products = DBSession.query(Product).filter_by(
-        user=response['logged_in']).all()
+
+    user_id = request.user.first().id
+    products = DBSession.query(Product).filter_by(user_id=user_id).all()
 
     for product in products:
         if product.a_price < product.n_price:

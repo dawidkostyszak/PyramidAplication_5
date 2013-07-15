@@ -15,7 +15,8 @@ requires = [
     'zope.sqlalchemy',
     'waitress',
     'nokaut',
-    'allegro'
+    'allegro',
+    'pyramid_simpleform',
     ]
 
 dependency_list = [
