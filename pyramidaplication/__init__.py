@@ -1,22 +1,12 @@
 from pyramid.config import Configurator
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
-from pyramid.security import (
-    Authenticated,
-    Allow,
-)
-
+from pyramid.security import Authenticated, Allow
 from sqlalchemy import engine_from_config
+from .views import logout
+from .utils import get_user
+from .models import DBSession, Base
 
-from .views import (
-    get_user,
-    logout,
-)
-
-from .models import (
-    DBSession,
-    Base,
-)
 
 class Root(object):
     __acl__ = [
@@ -51,6 +41,6 @@ def main(global_config, **settings):
     config.add_route('logout', '/logout')
     config.add_route('register', '/register')
     config.add_route('history', '/history')
-    config.add_route('top3', '/top3')
+    config.add_route('top', '/top')
     config.scan()
     return config.make_wsgi_app()

@@ -1,47 +1,11 @@
-from pyramid.view import (
-    view_config,
-)
-
-from allegro.lib import (
-    allegro_api,
-    AllegroError,
-)
-
-from nokaut.lib import (
-    nokaut_api,
-    NokautError,
-)
-
-from pyramid.httpexceptions import (
-    HTTPFound,
-)
-
-from pyramid.security import (
-    remember,
-    forget,
-    authenticated_userid,
-    unauthenticated_userid,
-    NO_PERMISSION_REQUIRED,
-)
-
-from .models import (
-    DBSession,
-    Product,
-    User,
-)
-
+from pyramid.view import view_config
+from allegro.lib import allegro_api, AllegroError
+from nokaut.lib import nokaut_api, NokautError
+from pyramid.httpexceptions import HTTPFound
+from pyramid.security import remember, forget, NO_PERMISSION_REQUIRED
+from .models import DBSession, Product, User
 from pyramid_simpleform import Form
-from forms import (
-    RegistrationForm,
-    LoginForm,
-)
-
-
-def get_user(request):
-    user_id = unauthenticated_userid(request)
-
-    if user_id is not None:
-        return DBSession.query(User).filter_by(login=user_id)
+from forms import RegistrationForm, LoginForm
 
 
 @view_config(
@@ -57,9 +21,6 @@ def home_view(request):
     renderer='pyramidaplication:templates/result.mako',
 )
 def search_result_view(request):
-
-    if not request.user:
-        return {'error': 'You need to login before search.'}
 
     data = request.GET.get('item')
 
@@ -102,7 +63,7 @@ def search_result_view(request):
         nokaut_url=nokaut_url,
     )
 
-    user_id = request.user.first().id
+    user_id = request.user.id
     popularity = 1
 
     products = DBSession.query(Product).filter_by(name=data).all()
@@ -142,7 +103,6 @@ def login_view(request):
         ).first()
 
         if user:
-            authenticated_userid(request)
             headers = remember(request, login)
             return HTTPFound(
                 location='/',
@@ -169,6 +129,7 @@ def logout(request):
     permission=NO_PERMISSION_REQUIRED,
 )
 def register_view(request):
+
     form = Form(request, schema=RegistrationForm)
 
     if request.method == 'POST' and form.validate():
@@ -192,43 +153,22 @@ def register_view(request):
     renderer='pyramidaplication:templates/history.mako',
 )
 def history_view(request):
-    response = dict(
-        history_search={},
-        logged_in=authenticated_userid(request),
-    )
 
-    user_id = request.user.first().id
+    user_id = request.user.id
     products = DBSession.query(Product).filter_by(user_id=user_id).all()
 
-    for product in products:
-        if product.a_price < product.n_price:
-            price = product.a_price
-            url = product.a_url
-        else:
-            price = product.n_price
-            url = product.n_url,
-        response['history_search'][product.id] = (
-            product.name,
-            price,
-            url[0],
-        )
-    return response
+    return dict(history_search=products)
 
 
 @view_config(
-    route_name='top3',
-    renderer='pyramidaplication:templates/top3.mako',
+    route_name='top',
+    renderer='pyramidaplication:templates/top.mako',
 )
-def top3_view(request):
-    response = dict(
-        top3={},
-        logged_in=authenticated_userid(request),
-    )
+def top_view(request):
 
-    products = DBSession.query(Product).order_by(
-        Product.popularity.desc()).all()
-    for product in products:
-        response['top3'][product.name] = ''
-        if len(response['top3']) == 3:
-            break
-    return response
+    top = DBSession.query(Product)\
+                   .group_by(Product.popularity)\
+                   .order_by(Product.popularity.desc())\
+                   .limit(3)
+
+    return dict(top=top)
