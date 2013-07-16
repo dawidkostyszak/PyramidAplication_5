@@ -16,7 +16,7 @@ requires = [
     'waitress',
     'nokaut',
     'allegro',
-    'wtforms',
+    'pyramid_simpleform',
     ]
 
 dependency_list = [

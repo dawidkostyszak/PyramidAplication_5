@@ -31,7 +31,10 @@ from .models import (
 )
 
 from pyramid_simpleform import Form
-from forms import RegistrationForm
+from forms import (
+    RegistrationForm,
+    LoginForm,
+)
 
 
 def get_user(request):
@@ -127,10 +130,11 @@ def search_result_view(request):
     permission=NO_PERMISSION_REQUIRED,
 )
 def login_view(request):
-    error = None
-    if request.method == 'POST':
-        login = request.POST.get('login')
-        password = request.POST.get('password')
+    form = Form(request, schema=LoginForm)
+
+    if request.method == 'POST' and form.validate():
+        login = form.data['login']
+        password = form.data['password']
 
         user = DBSession.query(User).filter_by(
             login=login,
@@ -144,10 +148,9 @@ def login_view(request):
                 location='/',
                 headers=headers,
             )
-        error = 'Failed login'
 
     return dict(
-        error=error,
+        error=form.errors,
     )
 
 
@@ -166,22 +169,21 @@ def logout(request):
     permission=NO_PERMISSION_REQUIRED,
 )
 def register_view(request):
-    message = None
-    error = None
+    form = Form(request, schema=RegistrationForm)
 
-    if request.method == 'POST':
-        form = Form(request, schema=RegistrationForm)
-        import ipdb; ipdb.set_trace()
-        if form.validate():
-            user = User(form.data['login'], form.data['password'])
-            DBSession.add(user)
-            message = 'Login registered successfully.'
-
-        #import ipdb; ipdb.set_trace()
+    if request.method == 'POST' and form.validate():
+        login = form.data['login']
+        password = form.data['password']
+        user = User(login=login, password=password)
+        DBSession.add(user)
+        return dict(
+            message='Login registered successfully.',
+            error=form.errors,
+        )
 
     return dict(
-        message=message,
-        error=error,
+        message=None,
+        error=form.errors
     )
 
 

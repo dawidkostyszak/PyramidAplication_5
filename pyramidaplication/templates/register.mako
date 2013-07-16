@@ -4,9 +4,11 @@
         <div class="head_login">Register</div>
 
         <form method="post" action="/register">
-            % if message == None and error != None:
-                <p style="color: red">${error}</p>
-            % elif message != None and error == None:
+            % if message == None and error != {}:
+                %for err in error.items():
+                <p style="color: red">${err[1]}</p>
+                %endfor
+            % elif message != None and error == {}:
                 <p style="color: green">${message}</p>
             % endif
             <input class="input_text" type="text" value="login" name="login"/>
