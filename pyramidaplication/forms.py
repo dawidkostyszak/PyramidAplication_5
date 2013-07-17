@@ -142,13 +142,6 @@ class ValidateLogin(FancyValidator):
                 value,
                 state
             )
-
-        if not DBSession.query(User).filter_by(login=value).first():
-            raise Invalid(
-                'Login does not exists.',
-                value,
-                state
-            )
         return value
 
 
@@ -167,7 +160,7 @@ class ValidatePassword(FancyValidator):
                 password=value
         ).first():
             raise Invalid(
-                'Wrong password.',
+                'Wrong login or password.',
                 value,
                 state
             )

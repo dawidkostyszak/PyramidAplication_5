@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, Float, ForeignKey
+from sqlalchemy import Column, Integer, Text, Float, ForeignKey, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import scoped_session, sessionmaker
 from zope.sqlalchemy import ZopeTransactionExtension
@@ -17,6 +17,7 @@ class Product(Base):
     n_url = Column(Text)
     popularity = Column(Integer)
     user_id = Column(Integer, ForeignKey('users.id'))
+    date = Column(Date)
 
 
 class User(Base):

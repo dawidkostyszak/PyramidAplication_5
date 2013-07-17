@@ -16,7 +16,7 @@
                 </div>
                 <div class="box_login">
                     % if request.user:
-                        <a class="btn btn-unsuccess" href="/logout">Logout</a>
+                        <a class="btn btn-unsuccess" href="/logout">Logout ${request.user.login}</a>
                     % else:
                         <a class="btn btn-success" href="/register">Register</a>
                         <a class="btn" href="/login">Login</a>

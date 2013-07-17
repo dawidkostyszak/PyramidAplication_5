@@ -7,6 +7,7 @@ from .models import DBSession, Product, User
 from pyramid_simpleform import Form
 from pyramid_simpleform.renderers import FormRenderer
 from forms import RegistrationForm, LoginForm
+import datetime
 
 
 @view_config(
@@ -23,67 +24,70 @@ def home_view(request):
 )
 def search_result_view(request):
 
-    data = request.GET.get('item')
+    name = request.GET.get('item')
 
-    if not data:
+    if not name:
         return {'error': 'Give a product name to compare'}
 
-    allegro_state = nokaut_state = 'price'
+    date = datetime.date.today()
+    user_id = request.user.id
+    error = None
+    product_exists = DBSession.query(Product)\
+                              .filter(
+                                  Product.name == name,
+                                  Product.user_id == user_id,
+                              ).first()
+
+    if product_exists:
+        if (date - product_exists.date).days < 2:
+            product_exists.popularity += 1
+            return dict(
+                product=product_exists,
+                error=error,
+            )
 
     try:
-        allegro_price, allegro_url = allegro_api(data)
+        allegro_price, allegro_url = allegro_api(name)
     except AllegroError:
-        allegro_state = 'price'
-        allegro_price = 'No product'
+        allegro_price = 0
         allegro_url = ''
 
     try:
         nokaut_price, nokaut_url = nokaut_api(
-            data,
+            name,
             request.registry.settings.get('nokaut_key')
         )
     except NokautError:
-        nokaut_state = 'price'
-        nokaut_price = 'No product'
+        nokaut_price = 0
         nokaut_url = ''
 
-    if nokaut_price != allegro_price:
-        if allegro_price < nokaut_price:
-            allegro_state = 'price win'
-        else:
-            nokaut_state = 'price win'
-
-    response = dict(
-        error=None,
-        product=data,
-        allegro_price_state=allegro_state,
-        allegro_price=allegro_price,
-        allegro_url=allegro_url,
-        nokaut_price_state=nokaut_state,
-        nokaut_price=nokaut_price,
-        nokaut_url=nokaut_url,
-    )
-
-    user_id = request.user.id
     popularity = 1
 
-    products = DBSession.query(Product).filter_by(name=data).all()
-    for prod in products:
-        prod.popularity += 1
-        popularity = prod.popularity
+    prod = DBSession.query(Product)\
+                    .filter(
+                        Product.name == name,
+                        Product.user_id == user_id
+                    ).first()
+
+    if prod:
+        popularity = prod.popularity + 1
 
     product = Product(
-        name=data,
+        name=name,
         a_price=allegro_price,
         a_url=allegro_url,
         n_price=nokaut_price,
         n_url=nokaut_url,
         popularity=popularity,
         user_id=user_id,
+        date=date,
     )
     DBSession.add(product)
 
-    return response
+    return dict(
+        product=product,
+        error=error,
+    )
 
 
 @view_config(
@@ -104,7 +108,7 @@ def login_view(request):
         ).first()
 
         if user:
-            headers = remember(request, login)
+            headers = remember(request, user.id)
             return HTTPFound(
                 location='/',
                 headers=headers,
@@ -136,7 +140,13 @@ def register_view(request):
         password = form.data['password']
         user = User(login=login, password=password)
         DBSession.add(user)
-        headers = remember(request, login)
+
+        user = DBSession.query(User).filter_by(
+            login=login,
+            password=password,
+        ).first()
+
+        headers = remember(request, user.id)
         return HTTPFound(
             location='/',
             headers=headers,
@@ -151,7 +161,10 @@ def register_view(request):
 def history_view(request):
 
     user_id = request.user.id
-    products = DBSession.query(Product).filter_by(user_id=user_id).all()
+    products = DBSession.query(Product)\
+                        .filter_by(user_id=user_id)\
+                        .order_by(Product.date.desc())\
+                        .all()
 
     return dict(history_search=products)
 
@@ -163,7 +176,6 @@ def history_view(request):
 def top_view(request):
 
     top = DBSession.query(Product)\
-                   .group_by(Product.popularity)\
                    .order_by(Product.popularity.desc())\
                    .limit(3)
 

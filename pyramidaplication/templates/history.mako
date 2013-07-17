@@ -5,13 +5,20 @@
         %for product in history_search:
         <tr>
             <td class="name_list">${product.name}</td>
-            %if product.a_price < product.n_price:
-                <td class="price_list">Najniższa cena: ${product.a_price} zł</td>
-                <td class="more"><a href=${product.a_url} target="_blank" class="link_more btn">Zobacz</a></td>
-            %else:
-                <td class="price_list">Najniższa cena: ${product.n_price} zł</td>
-                <td class="more"><a href=${product.n_url} target="_blank" class="link_more btn">Zobacz</a></td>
-            %endif
+            <td class="price_list">
+                %if product.a_price > 0 and product.n_price > 0:
+                    Lower price: ${product.a_price if product.a_price < product.n_price else product.n_price} zł
+                %elif product.a_price == 0 and product.n_price > 0:
+                    Lower price: ${product.n_price} zł
+                %elif product.a_price > 0 and product.n_price == 0:
+                    Lower price: ${product.a_price} zł
+                %else:
+                    No product
+                %endif
+            </td>
+            <td class="price_list">Data: ${product.date}</td>
+            <td class="price_list">Searched: ${product.popularity} times</td>
+            <td class="more"><a class="link_more btn">Refresh</a></td>
         </tr>
         %endfor
     </table>
