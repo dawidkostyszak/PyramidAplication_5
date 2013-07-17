@@ -3,14 +3,14 @@
     <div class="form_login">
         <div class="head_login">Login in</div>
         <form method="post" action="/login">
-            % if error != {}:
-                %for err in error.items():
-                <p style="color: red">${err[1]}</p>
-                %endfor
-            %endif
-            <input class="input_text" type="text" value="login" name="login"/>
-            <input class="input_text" type="password" value="password" name="password"/>
-            <button class="btn btn-primary" type=submit>Login</button>
+            %if renderer.is_error:
+                % for error in renderer.all_errors():
+                    <p style="color: red">${error}</p>
+                % endfor
+            % endif
+            <div class="input_text"><p>Login: </p>${renderer.text("login")}</div>
+            <div class="input_text"><p>Password: </p>${renderer.password("password")}</div>
+            ${renderer.submit("submit", "Login")}
         </form>
     </div>
 </div>

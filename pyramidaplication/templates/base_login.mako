@@ -25,14 +25,5 @@
             <img src="${request.static_url('pyramidaplication:static/img/logo_stx.png')}" alt="logo_stx"/>
         </div>
     </div>
-    <script type="text/javascript" src="js/jquery-1.8.3.min.js"></script>
-    <script type="text/javascript">
-    $(document).ready(function() {
-        var btn_search = $('.search input');
-        btn_search.focus(function() {
-            $(this).attr('value','');
-        });
-    });
-    </script>
 </body>
 </html>

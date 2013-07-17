@@ -117,9 +117,13 @@ class CheckPassword(FancyValidator):
 
 
 class RegistrationForm(Schema):
+
+    allow_extra_fields = True
+    filter_extra_fields = True
+
     login = CheckLogin()
     password = CheckPassword()
-    confirm_password = CheckPassword()
+    confirm_password = validators.String()
     chained_validators = [
         validators.FieldsMatch(
             'password',
@@ -171,5 +175,9 @@ class ValidatePassword(FancyValidator):
 
 
 class LoginForm(Schema):
+
+    allow_extra_fields = True
+    filter_extra_fields = True
+
     login = ValidateLogin()
     password = ValidatePassword()

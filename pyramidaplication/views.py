@@ -5,6 +5,7 @@ from pyramid.httpexceptions import HTTPFound
 from pyramid.security import remember, forget, NO_PERMISSION_REQUIRED
 from .models import DBSession, Product, User
 from pyramid_simpleform import Form
+from pyramid_simpleform.renderers import FormRenderer
 from forms import RegistrationForm, LoginForm
 
 
@@ -109,16 +110,14 @@ def login_view(request):
                 headers=headers,
             )
 
-    return dict(
-        error=form.errors,
-    )
+    return dict(renderer=FormRenderer(form))
 
 
 @view_config(route_name='logout')
 def logout(request):
     headers = forget(request)
     return HTTPFound(
-        location=('/login'),
+        location='/login',
         headers=headers,
     )
 
@@ -137,15 +136,12 @@ def register_view(request):
         password = form.data['password']
         user = User(login=login, password=password)
         DBSession.add(user)
-        return dict(
-            message='Login registered successfully.',
-            error=form.errors,
+        headers = remember(request, login)
+        return HTTPFound(
+            location='/',
+            headers=headers,
         )
-
-    return dict(
-        message=None,
-        error=form.errors
-    )
+    return dict(renderer=FormRenderer(form))
 
 
 @view_config(
